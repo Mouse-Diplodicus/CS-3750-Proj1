@@ -42,7 +42,32 @@ Option 2: symmetric-key encrypted message and its digital signature
      by piece, where each piece is recommended to be a multiple of 16 bytes long. (Hint: if the length of the last piece is less
      than that multiple of 16 bytes, it needs to be placed in a byte array whose array size is the length of the last piece before
      being encrypted.) SAVE the resulting blocks of AES ciphertext into a file named “message.aescipher”.
+
 - In  the  receiver’s  program  in  the  directory  “Receiver”,  using  AES  and  RSA Decryptions to  get  SHA256 (M)  and  M,  compare SHA256(M) with the locally calculated SHA256 hash of M, report hashing error if any, and then save M to a file.
+
+  1. To  test  this  program,  the  corresponding  key  files  need  to  be  copied  here  from  the  directory  “KeyGen”,  and  the  file 
+  “message.aescipher” needs to be copied here from the directory “Sender”. 
+
+  2. Read the information on the keys to be used in this program from the key files and generate Kx+ and Kxy. 
+
+  3. Display a prompt “Input the name of the message file:” and take a user input from the keyboard.  The 
+  resulting message M will be saved to this file at the end of this program. 
+
+  4. Read the ciphertext, C, from the file “message.aescipher” block by block, where each block needs to be a multiple of 16 
+  bytes long.  (Hint: if the length of the last block is less than that multiple of 16 bytes, it needs to be placed in a byte array 
+  whose array size is the length of the last piece before being decrypted.)  Calculate the AES Decryption of C using Kxy 
+  block by block to get RSA-En Kx- (SHA256 (M)) || M, and save the resulting pieces into a file named “message.ds-msg”.
+  
+  5. If using "RSA/ECB/PKCS1Padding", read the first 128 bytes from the file “message.ds-msg” to get the digital signature RSA-En Kx-
+  (SHA256 (M)), and copy the message M, i.e., the leftover bytes in the file “message.ds-msg”, to a file whose
+  name  is  specified  in  Step  3. (Why  128  bytes?  Why  is  the  leftover  M?)  Calculate  the  RSA  Decryption  of  this  digital
+  signature using Kx+ to get the digital digest SHA256(M), SAVE this digital digest into a file named “message.dd”, and
+  DISPLAY it in Hexadecimal bytes.
+  
+  6. Read the message M from the file whose name is specified in Step 3 piece by piece, where each piece is recommended to
+  be a small multiple of 1024 bytes, calculate the SHA256 hash value (digital digest) of the entire message M, DISPLAY it
+  in Hexadecimal bytes, compare it with the digital digest obtained in Step 5, display whether the digital digest passes the
+  authentication check. 
 
 ## Running the Program
 
