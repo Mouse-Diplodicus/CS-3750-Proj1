@@ -6,34 +6,31 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
+import java.util.Scanner;
 
 public class Sender {
+    private static final Scanner sysIn = new Scanner(System.in);     // Scanner object for reading user inputs
 
     public static void main(String[] args) {
         try {
-            readPubKeyFromFile("XPublic.key");
-            readPrivKeyFromFile("XPrivate.key");
-            readPubKeyFromFile("YPublic.key");
-            readPrivKeyFromFile("YPrivate.key");
-            loadSymmetricKey();
+            PublicKey xPublicK = readPubKeyFromFile("XPublic.key");
+            PrivateKey xPrivateK = readPrivKeyFromFile("XPrivate.key");
+            PublicKey yPublicK = readPubKeyFromFile("YPublic.key");
+            PrivateKey yPrivateK = readPrivKeyFromFile("YPrivate.key");
+            byte[] symKey = loadSymmetricKey();
         } catch (IOException e) {
             System.out.println("Error finding/reading keys");
             e.printStackTrace();
         }
     }
 
-    private static BufferedOutputStream getOutStreamForFile(String filename){
-        try {
-            return new BufferedOutputStream(new FileOutputStream(filename));
-        } catch (FileNotFoundException e) {
-            System.out.println("Error, Could not find file: " + filename);
-            e.printStackTrace();
-            return null;
-        }
+    private static void loadMessage(){
+        System.out.print("Please input a 16-character string to generate the symmetric key: ");
+        String msgFileName = sysIn.nextLine();  // Read user input
     }
 
     //read public key parameters from a file and generate the public key
-    public static PublicKey readPubKeyFromFile(String keyFileName)
+    private static PublicKey readPubKeyFromFile(String keyFileName)
             throws IOException {
         try(ObjectInputStream oin = new ObjectInputStream(new FileInputStream(keyFileName))) {
             BigInteger m = (BigInteger) oin.readObject();
@@ -51,7 +48,7 @@ public class Sender {
     }
 
     //read private key parameters from a file and generate the private key
-    public static PrivateKey readPrivKeyFromFile(String keyFileName)
+    private static PrivateKey readPrivKeyFromFile(String keyFileName)
             throws IOException {
         try(ObjectInputStream oin = new ObjectInputStream(new FileInputStream(keyFileName))) {
             BigInteger m = (BigInteger) oin.readObject();
