@@ -73,20 +73,16 @@ by either ObjectInputStream & ObjectOutputStream (for public/private key files) 
 
 To start the programs use the following commands:
 
-> java """"  
-> java """"  
+> java KeyGen  
+> java Receiver
+> java Sender
 
 Once started the program will ...
-
-Additionally, if you want to save the programs outputs to a file the following
-commands can be used:
-
-> java """" | tee filename.txt  
-> java """" | tee filename.txt  
 
 ## Compiling the Program
 
 If the program needs to be compiled use the following commands:
 
-> javac """"  
-> javac """"  
+> javac KeyGen.java 
+> javac Receiver.java 
+> javac Sender.java 

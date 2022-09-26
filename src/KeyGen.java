@@ -57,8 +57,8 @@ public class KeyGen {
     // Save the parameters of the public and private keys to file
     public static void saveToFile(String fileName, BigInteger mod,
                                   BigInteger exp) throws IOException {
-        System.out.println("Writing to " + fileName + ": modulus = " +
-                mod.toString() + ", exponent = " + exp.toString() + "\n");
+        System.out.println("Writing to " + fileName + ":\n    modulus = " +
+                mod.toString() + "\n    exponent = " + exp.toString() + "\n");
 
         ObjectOutputStream oOutStream = new ObjectOutputStream(
                 new BufferedOutputStream(new FileOutputStream(fileName)));
