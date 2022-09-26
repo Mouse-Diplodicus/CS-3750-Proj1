@@ -25,7 +25,7 @@ public class Sender {
     }
 
     private static void loadMessage(){
-        System.out.print("Please input a 16-character string to generate the symmetric key: ");
+        System.out.print("Input the name of the message file: ");
         String msgFileName = sysIn.nextLine();  // Read user input
     }
 
