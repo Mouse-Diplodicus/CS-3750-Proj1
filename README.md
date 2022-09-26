@@ -1,5 +1,5 @@
 # CS-3750 - Project 1
-by Matthew Williams and 
+by Matthew Williams and Adriana Miller
 
 ## Description
 

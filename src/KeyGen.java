@@ -54,7 +54,7 @@ public class KeyGen {
         return generator.generateKeyPair();
     }
 
-    // Save the parameters of the public and private keys to file
+    // Save the parameters of the public and private keys to file, mod is written first then exponent
     public static void saveToFile(String fileName, BigInteger mod,
                                   BigInteger exp) throws IOException {
         System.out.println("Writing to " + fileName + ":\n    modulus = " +
