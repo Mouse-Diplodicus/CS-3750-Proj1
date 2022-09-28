@@ -1,7 +1,5 @@
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import javax.crypto.Cipher;
+import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
@@ -27,10 +25,22 @@ public class Receiver {
         }
     }
 
-    private static void loadMessage(){
-        System.out.print("Please input a 16-character string to generate the symmetric key: ");
+    private static void loadMessage() throws IOException {
+        System.out.print("Input the name of the message file: ");
         String msgFileName = sysIn.nextLine();  // Read user input
+        BufferedInputStream file = new BufferedInputStream(new FileInputStream(msgFileName));
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Paddin");
+        cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
+        byte[] buffer = new byte[1024 * 16];
+        int numBytesRead;
+        while (true) {
+            numBytesRead = file.read(buffer, 0, buffer.length);
+            if(numBytesRead <= 0) break;
+            cipher.doFinal(buffer, 0, numBytesRead);
+        }
     }
+
+
 
     //read public key parameters from a file and generate the public key
     private static PublicKey readPubKeyFromFile(String keyFileName)
