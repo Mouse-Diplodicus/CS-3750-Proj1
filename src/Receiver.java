@@ -15,7 +15,7 @@ import java.util.Scanner;
 public class Receiver {
     private static final Scanner sysIn = new Scanner(System.in);     // Scanner object for reading user inputs
     private static final Integer BUFFER_SIZE = 32 * 1024;
-    private static String IV = "AAAAAAAAAAAAAAAA";
+    private static String IV = "HJDSLBWERAYTIZQP";
     private static PublicKey xPublicK;
     private static byte[] symKey;
 
