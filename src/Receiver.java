@@ -2,6 +2,8 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -13,43 +15,51 @@ import java.util.Scanner;
 public class Receiver {
     private static final Scanner sysIn = new Scanner(System.in);     // Scanner object for reading user inputs
     private static final Integer BUFFER_SIZE = 32 * 1024;
+    private static String IV = "AAAAAAAAAAAAAAAA";
+    private static PublicKey xPublicK;
+    private static byte[] symKey;
 
-    public static void main(String[] args) {
+    public void main(String[] args) {
         System.out.print("Input the name of the message file: ");
         String msgFileName = sysIn.nextLine();  // Read user input
         try {
-            PublicKey xPublicK = readPubKeyFromFile("XPublic.key");
-            // PrivateKey xPrivateK = readPrivKeyFromFile("XPrivate.key");
-            // PublicKey yPublicK = readPubKeyFromFile("YPublic.key");
-            //PrivateKey yPrivateK = readPrivKeyFromFile("YPrivate.key");
-            byte[] symKey = loadSymmetricKey();
-            loadMessage(msgFileName);
-        } catch (IOException e) {
-            System.out.println("Error finding/reading keys");
+            this.xPublicK = readPubKeyFromFile("XPublic.key");
+            this.symKey = loadSymmetricKey();
+            loadAndAESDecrypt("message.aescipher");
+            rsaDecrypt(msgFileName);
+            sha256(msgFileName);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static void loadMessage(String msgFileName) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException {
+    private void loadAndAESDecrypt(String msgFileName) throws Exception {
         BufferedInputStream file = new BufferedInputStream(new FileInputStream(msgFileName));
+        BufferedOutputStream outFile = new BufferedOutputStream(new FileOutputStream("message.ds-msg"));
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Paddin");
-        cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
-        byte[] buffer = new byte[1024 * 16];
+        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(this.symKey, "AES"),
+                new IvParameterSpec(IV.getBytes("UTF-8")));
+        byte[] buffer = new byte[BUFFER_SIZE];
         int numBytesRead;
         while (true) {
             numBytesRead = file.read(buffer, 0, buffer.length);
             if(numBytesRead <= 0) break;
-            cipher.doFinal(buffer, 0, numBytesRead);
+            if(numBytesRead == BUFFER_SIZE) {
+                outFile.write(cipher.doFinal(buffer, 0, numBytesRead));
+            } else {
+                byte[] smallBuffer = new byte[numBytesRead];
+                System.arraycopy(buffer, 0, smallBuffer, 0, numBytesRead);
+                outFile.write(cipher.doFinal(smallBuffer, 0, numBytesRead));
+            }
         }
     }
 
-    private static void step5(String messageOutputFile) throws Exception {
-        PublicKey xPublicK = readPubKeyFromFile("XPublic.key");
+    private void rsaDecrypt(String messageOutputFile) throws Exception {
         BufferedInputStream file = new BufferedInputStream(new FileInputStream("message.ds-msg"));
         BufferedOutputStream mOut = new BufferedOutputStream(new FileOutputStream(messageOutputFile));
         byte[] ds = new byte[128];
         file.read(ds, 0, ds.length);
-        String dd = decryptDS(ds, xPublicK);
+        String dd = decryptDS(ds, this.xPublicK);
         byte[] m = new byte[BUFFER_SIZE];
         int numBytesRead;
         do {
