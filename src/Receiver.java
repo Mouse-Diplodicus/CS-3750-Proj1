@@ -26,8 +26,13 @@ public class Receiver {
             this.xPublicK = readPubKeyFromFile("XPublic.key");
             this.symKey = loadSymmetricKey();
             loadAndAESDecrypt("message.aescipher");
-            rsaDecrypt(msgFileName);
-            sha256(msgFileName);
+            String ddDecrypted = rsaDecrypt(msgFileName);
+            String ddCalculated = sha256(msgFileName);
+            if (ddDecrypted == ddCalculated) {
+                System.out.print("Authentication Passed");
+            } else {
+                System.out.print("Authentication Failed");
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -52,14 +57,18 @@ public class Receiver {
                 outFile.write(cipher.doFinal(smallBuffer, 0, numBytesRead));
             }
         }
+        file.close();
+        outFile.close();
     }
 
-    private void rsaDecrypt(String messageOutputFile) throws Exception {
+    private String rsaDecrypt(String messageOutputFile) throws Exception {
         BufferedInputStream file = new BufferedInputStream(new FileInputStream("message.ds-msg"));
         BufferedOutputStream mOut = new BufferedOutputStream(new FileOutputStream(messageOutputFile));
+        BufferedOutputStream ddOut = new BufferedOutputStream(new FileOutputStream("message.dd"));
+
         byte[] ds = new byte[128];
         file.read(ds, 0, ds.length);
-        String dd = decryptDS(ds, this.xPublicK);
+
         byte[] m = new byte[BUFFER_SIZE];
         int numBytesRead;
         do {
@@ -67,7 +76,16 @@ public class Receiver {
             if(numBytesRead == -1) break;
             mOut.write(m, 0, numBytesRead);
         } while (numBytesRead == BUFFER_SIZE);
+
+        byte[] dd = decryptDS(ds, this.xPublicK);
+        printHash(dd);
+        ddOut.write(dd);
+
         file.close();
+        mOut.close();
+        ddOut.close();
+
+        return new String(dd, StandardCharsets.UTF_8);
     }
 
     private static String sha256(String fileName) throws NoSuchAlgorithmException, IOException {
@@ -80,29 +98,26 @@ public class Receiver {
             numBytesRead = in.read(buffer, 0, buffer.length);
         } while (numBytesRead > 0);
         md = in.getMessageDigest();
+
         in.close();
+        file.close();
 
         byte[] hash = md.digest();
         return new String(hash, StandardCharsets.UTF_8);
     }
 
-    public static String decryptDS(byte[] input, PublicKey key) throws Exception {
+    public static byte[] decryptDS(byte[] input, PublicKey key) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        SecureRandom random = new SecureRandom();
 
-        /* first, encryption & decryption via the paired keys */
-        cipher.init(Cipher.DECRYPT_MODE, key, random);
+        cipher.init(Cipher.DECRYPT_MODE, key);
 
-        byte[] plainText = cipher.doFinal(input);
-        System.out.println("plainText (" + plainText.length +" bytes): " + new String(plainText) + "\n");
-        return new String(plainText, StandardCharsets.UTF_8);
+        return cipher.doFinal(input);
     }
 
-    private static void printHashFromString(String hash){
-        byte[] h = hash.getBytes(StandardCharsets.UTF_8);
+    private static void printHash(byte[] hash){
         System.out.println("digital digest (hash value):");
-        for (int k=0; k<h.length; k++) {
-            System.out.format("%2X ", h[k]) ;
+        for (int k=0; k<hash.length; k++) {
+            System.out.format("%2X ", hash[k]) ;
             if (k + 1 % 16 == 0) System.out.println("");
         }
         System.out.println("");
