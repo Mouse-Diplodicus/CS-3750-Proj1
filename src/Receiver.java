@@ -87,7 +87,7 @@ public class Receiver {
             numBytesRead = in.read(buffer, 0, buffer.length);
         } while (numBytesRead > 0);
         md = in.getMessageDigest();
-        
+
         in.close();
         file.close();
 
