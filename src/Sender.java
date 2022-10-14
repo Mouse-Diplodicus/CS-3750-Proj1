@@ -53,7 +53,6 @@ public class Sender{
             RSAencrypt(hash, fileName);
             // Step 6: Calculate 
             AESEncrypt();
-            
         } catch (IOException e) {
             System.out.println("Error finding/reading keys");
             e.printStackTrace();
@@ -78,17 +77,16 @@ public class Sender{
 
         byte[] hash = md.digest();
 
-        System.out.println("Digital Digest (SHA256(M)):");
-        printHash(hash);
-
         System.out.println("Do you want to invert the first byte in SHA256(M)? (Y or N)");
         String answer = sysIn.nextLine();
         // TO DO: While !validIn
-        if (answer == "Y"){
+        if (answer.toLowerCase().toCharArray()[0] == 'y') {
             // If answer is yes, replace first byte with bitwise its inverted value
             hash[0] = (byte) ~hash[0];
-            System.out.println("You answered: " + answer + "The first bit is now: " + hash[0]);
         }
+
+        System.out.println("Digital Digest (SHA256(M)):");
+        printHash(hash);
 
         // Save hash to file message.dd
         BufferedOutputStream shaMessageFile = new BufferedOutputStream(new FileOutputStream("message.dd"));
@@ -141,9 +139,8 @@ public class Sender{
         // Read 16 bytes at a time and write to file message.aescipher
         byte[] buffer = new byte[BUFFER_SIZE];
         int numBytesRead;
-        while (true) {
+        do {
             numBytesRead = file.read(buffer, 0, buffer.length);
-            if(numBytesRead <= 0) break;
             if(numBytesRead == BUFFER_SIZE) {
                 AESencryption.write(cipher.doFinal(buffer, 0, numBytesRead));
             } else {
@@ -152,7 +149,7 @@ public class Sender{
                 System.arraycopy(buffer, 0, smallBuffer, 0, smallBufferSize);
                 AESencryption.write(cipher.doFinal(smallBuffer, 0, smallBufferSize));
             }
-        }
+        } while (numBytesRead == BUFFER_SIZE);
         AESencryption.close();
         file.close();
     }

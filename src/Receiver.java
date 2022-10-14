@@ -25,7 +25,7 @@ public class Receiver {
         try {
             xPublicK = readPubKeyFromFile("XPublic.key");
             symKey = loadSymmetricKey();
-            loadAndAESDecrypt("message.aescipher");
+            loadAndAESDecrypt();
             String ddDecrypted = rsaDecrypt(msgFileName);
             String ddCalculated = sha256(msgFileName);
             if (ddDecrypted == ddCalculated) {
@@ -38,17 +38,16 @@ public class Receiver {
         }
     }
 
-    private static void loadAndAESDecrypt(String msgFileName) throws Exception {
-        BufferedInputStream file = new BufferedInputStream(new FileInputStream(msgFileName));
+    private static void loadAndAESDecrypt() throws Exception {
+        BufferedInputStream file = new BufferedInputStream(new FileInputStream("message.aescipher"));
         BufferedOutputStream outFile = new BufferedOutputStream(new FileOutputStream("message.ds-msg"));
         Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding", "SunJCE");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(symKey, "AES"),
                 new IvParameterSpec(IV.getBytes("UTF-8")));
         byte[] buffer = new byte[BUFFER_SIZE];
         int numBytesRead;
-        while (true) {
-            numBytesRead = file.read(buffer, 0, buffer.length);
-            if(numBytesRead <= 0) break;
+        do {
+            numBytesRead = file.read(buffer, 0, BUFFER_SIZE);
             if(numBytesRead == BUFFER_SIZE) {
                 outFile.write(cipher.doFinal(buffer, 0, numBytesRead));
             } else {
@@ -57,7 +56,7 @@ public class Receiver {
                 System.arraycopy(buffer, 0, smallBuffer, 0, smallBufferSize);
                 outFile.write(cipher.doFinal(smallBuffer, 0, smallBufferSize));
             }
-        }
+        } while (numBytesRead == BUFFER_SIZE);
         file.close();
         outFile.close();
     }
