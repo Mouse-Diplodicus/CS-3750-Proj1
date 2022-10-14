@@ -70,6 +70,9 @@ public class Receiver {
         byte[] ds = new byte[128];
         file.read(ds, 0, ds.length);
 
+        System.out.println("Encrypted Digital Digest (RSA-En Kx– (SHA256(M))):");
+        printHash(ds);
+
         byte[] m = new byte[BUFFER_SIZE];
         int numBytesRead;
         do {
@@ -78,7 +81,10 @@ public class Receiver {
             mOut.write(m, 0, numBytesRead);
         } while (numBytesRead == BUFFER_SIZE);
 
-        byte[] dd = decryptDS(ds, xPublicK);
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, xPublicK);
+
+        byte[] dd = cipher.doFinal(ds);
         System.out.println("Decrypted Digital Digest (SHA256(M)):");
         printHash(dd);
         ddOut.write(dd);
@@ -108,14 +114,6 @@ public class Receiver {
         System.out.println("Calculated Digital Digest (SHA256(M)):");
         printHash(hash);
         return new String(hash, StandardCharsets.UTF_8);
-    }
-
-    public static byte[] decryptDS(byte[] input, PublicKey key) throws Exception {
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-
-        cipher.init(Cipher.DECRYPT_MODE, key);
-
-        return cipher.doFinal(input);
     }
 
     private static void printHash(byte[] hash){

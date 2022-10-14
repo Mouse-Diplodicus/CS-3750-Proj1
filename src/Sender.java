@@ -85,7 +85,7 @@ public class Sender{
         String answer = sysIn.nextLine();
         // TO DO: While !validIn
         if (answer == "Y"){
-            // If answer is yes, replace firt byte with bitwise its inverted valu
+            // If answer is yes, replace first byte with bitwise its inverted value
             hash[0] = (byte) ~hash[0];
             System.out.println("You answered: " + answer + "The first bit is now: " + hash[0]);
         }
