@@ -28,10 +28,12 @@ public class Receiver {
             loadAndAESDecrypt();
             String ddDecrypted = rsaDecrypt(msgFileName);
             String ddCalculated = sha256(msgFileName);
+            System.out.println("ddDecrypted:  " + ddDecrypted);
+            System.out.println("ddCalculated: " + ddCalculated);
             if (ddDecrypted == ddCalculated) {
-                System.out.print("Authentication Passed");
+                System.out.println("Authentication Passed");
             } else {
-                System.out.print("Authentication Failed");
+                System.out.println("Authentication Failed");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,7 +56,7 @@ public class Receiver {
                 int smallBufferSize = numBytesRead + (16 - (numBytesRead % 16));
                 byte[] smallBuffer = new byte[smallBufferSize];
                 System.arraycopy(buffer, 0, smallBuffer, 0, smallBufferSize);
-                outFile.write(cipher.doFinal(smallBuffer, 0, smallBufferSize));
+                outFile.write(cipher.doFinal(smallBuffer, 0, smallBufferSize), 0, numBytesRead);
             }
         } while (numBytesRead == BUFFER_SIZE);
         file.close();
@@ -99,13 +101,14 @@ public class Receiver {
         BufferedInputStream file = new BufferedInputStream(new FileInputStream(fileName));
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         DigestInputStream in = new DigestInputStream(file, md);
+
         byte[] buffer = new byte[BUFFER_SIZE];
         int numBytesRead;
         do {
             numBytesRead = in.read(buffer, 0, buffer.length);
         } while (numBytesRead== BUFFER_SIZE);
-        md = in.getMessageDigest();
 
+        md = in.getMessageDigest();
         in.close();
         file.close();
 

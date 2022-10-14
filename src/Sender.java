@@ -147,7 +147,7 @@ public class Sender{
                 int smallBufferSize = numBytesRead + (16 - (numBytesRead % 16));
                 byte[] smallBuffer = new byte[smallBufferSize];
                 System.arraycopy(buffer, 0, smallBuffer, 0, smallBufferSize);
-                AESencryption.write(cipher.doFinal(smallBuffer, 0, smallBufferSize));
+                AESencryption.write(cipher.doFinal(smallBuffer, 0, smallBufferSize), 0, numBytesRead);
             }
         } while (numBytesRead == BUFFER_SIZE);
         AESencryption.close();
