@@ -13,18 +13,18 @@ import java.security.spec.RSAPublicKeySpec;
 import java.util.Scanner;
 
 public class Receiver {
-    private static final Scanner sysIn = new Scanner(System.in);     // Scanner object for reading user inputs
+    private static Scanner sysIn = new Scanner(System.in);     // Scanner object for reading user inputs
     private static final Integer BUFFER_SIZE = 32 * 1024;
     private static String IV = "HJDSLBWERAYTIZQP";
     private static PublicKey xPublicK;
     private static byte[] symKey;
 
-    public void main(String[] args) {
+    public static void main(String[] args) {
         System.out.print("Input the name of the message file: ");
         String msgFileName = sysIn.nextLine();  // Read user input
         try {
-            this.xPublicK = readPubKeyFromFile("XPublic.key");
-            this.symKey = loadSymmetricKey();
+            xPublicK = readPubKeyFromFile("XPublic.key");
+            symKey = loadSymmetricKey();
             loadAndAESDecrypt("message.aescipher");
             String ddDecrypted = rsaDecrypt(msgFileName);
             String ddCalculated = sha256(msgFileName);
@@ -38,11 +38,11 @@ public class Receiver {
         }
     }
 
-    private void loadAndAESDecrypt(String msgFileName) throws Exception {
+    private static void loadAndAESDecrypt(String msgFileName) throws Exception {
         BufferedInputStream file = new BufferedInputStream(new FileInputStream(msgFileName));
         BufferedOutputStream outFile = new BufferedOutputStream(new FileOutputStream("message.ds-msg"));
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Paddin");
-        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(this.symKey, "AES"),
+        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding", "SunJCE");
+        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(symKey, "AES"),
                 new IvParameterSpec(IV.getBytes("UTF-8")));
         byte[] buffer = new byte[BUFFER_SIZE];
         int numBytesRead;
@@ -52,16 +52,17 @@ public class Receiver {
             if(numBytesRead == BUFFER_SIZE) {
                 outFile.write(cipher.doFinal(buffer, 0, numBytesRead));
             } else {
-                byte[] smallBuffer = new byte[numBytesRead];
-                System.arraycopy(buffer, 0, smallBuffer, 0, numBytesRead);
-                outFile.write(cipher.doFinal(smallBuffer, 0, numBytesRead));
+                int smallBufferSize = numBytesRead + (16 - (numBytesRead % 16));
+                byte[] smallBuffer = new byte[smallBufferSize];
+                System.arraycopy(buffer, 0, smallBuffer, 0, smallBufferSize);
+                outFile.write(cipher.doFinal(smallBuffer, 0, smallBufferSize));
             }
         }
         file.close();
         outFile.close();
     }
 
-    private String rsaDecrypt(String messageOutputFile) throws Exception {
+    private static String rsaDecrypt(String messageOutputFile) throws Exception {
         BufferedInputStream file = new BufferedInputStream(new FileInputStream("message.ds-msg"));
         BufferedOutputStream mOut = new BufferedOutputStream(new FileOutputStream(messageOutputFile));
         BufferedOutputStream ddOut = new BufferedOutputStream(new FileOutputStream("message.dd"));
@@ -77,7 +78,8 @@ public class Receiver {
             mOut.write(m, 0, numBytesRead);
         } while (numBytesRead == BUFFER_SIZE);
 
-        byte[] dd = decryptDS(ds, this.xPublicK);
+        byte[] dd = decryptDS(ds, xPublicK);
+        System.out.println("Decrypted Digital Digest (SHA256(M)):");
         printHash(dd);
         ddOut.write(dd);
 
@@ -96,13 +98,15 @@ public class Receiver {
         int numBytesRead;
         do {
             numBytesRead = in.read(buffer, 0, buffer.length);
-        } while (numBytesRead > 0);
+        } while (numBytesRead== BUFFER_SIZE);
         md = in.getMessageDigest();
 
         in.close();
         file.close();
 
         byte[] hash = md.digest();
+        System.out.println("Calculated Digital Digest (SHA256(M)):");
+        printHash(hash);
         return new String(hash, StandardCharsets.UTF_8);
     }
 
@@ -115,13 +119,12 @@ public class Receiver {
     }
 
     private static void printHash(byte[] hash){
-        System.out.println("digital digest (hash value):");
-        for (int k=0; k<hash.length; k++) {
-            System.out.format("%2X ", hash[k]) ;
-            if (k + 1 % 16 == 0) System.out.println("");
+        for (int k = 0; k<hash.length; k++) {
+            String out = String.format("%2X", hash[k]).replace(' ', '0');
+            System.out.print(out + " ") ;
+            if ((k + 1) % 16 == 0) System.out.println("");
         }
         System.out.println("");
-
     }
 
     //read public key parameters from a file and generate the public key
@@ -166,7 +169,7 @@ public class Receiver {
         BufferedInputStream symKeyFile = new BufferedInputStream(new FileInputStream("symmetric.key"));
         symKeyFile.read(symKey, 0, 16);
         symKeyFile.close();
-        System.out.println(new String(symKey, StandardCharsets.UTF_8));
+        System.out.println("Symmetric Key: " + new String(symKey, StandardCharsets.UTF_8) + "\n");
         return symKey;
     }
 }
