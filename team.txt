@@ -1,0 +1,5 @@
+1) Team Member Names:
+	Adriana Miller
+	Matthew Williams
+2) Implemented Option:
+	Option 2: symmetric-key encrypted message and its digital signature 
