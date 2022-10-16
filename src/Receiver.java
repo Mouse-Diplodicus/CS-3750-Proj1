@@ -116,7 +116,7 @@ public class Receiver {
 
             byte[] hash = md.digest();
 
-            System.out.println("Digital Digest (SHA256(M)):");
+            System.out.println("Calculated Digital Digest (SHA256(M)):");
             printHash(hash);
 
             // Save hash to file message.dd
