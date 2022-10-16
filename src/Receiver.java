@@ -30,7 +30,7 @@ public class Receiver {
             String ddDecrypted = rsaDecrypt(msgFileName);
             System.out.println("ddCalculated: " + ddCalculated);
             System.out.println("ddDecrypted:  " + ddDecrypted);
-            if (ddCalculated == ddDecrypted) {
+            if (ddDecrypted == ddCalculated) {
                 System.out.println("Authentication Passed");
             } else {
                 System.out.println("Authentication Failed");
@@ -116,8 +116,14 @@ public class Receiver {
 
             byte[] hash = md.digest();
 
-            System.out.println("Calculated Digital Digest (SHA256(M)):");
+            System.out.println("Digital Digest (SHA256(M)):");
             printHash(hash);
+
+            // Save hash to file message.dd
+            BufferedOutputStream shaMessageFile = new BufferedOutputStream(new FileOutputStream("message.dd"));
+
+            shaMessageFile.write(hash, 0, hash.length);
+            shaMessageFile.close();
 
             return new String(hash);
         }
