@@ -132,7 +132,7 @@ public class Sender{
         BufferedInputStream file = new BufferedInputStream(new FileInputStream("message.ds-msg"));
         BufferedOutputStream AESencryption = new BufferedOutputStream(new FileOutputStream("message.aescipher"));
 
-        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding", "SunJCE");
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding", "SunJCE");
         SecretKeySpec key = new SecretKeySpec(symKey, "AES");
         cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(IV.getBytes("UTF-8")));
 
@@ -141,14 +141,7 @@ public class Sender{
         int numBytesRead;
         do {
             numBytesRead = file.read(buffer, 0, buffer.length);
-            if(numBytesRead == BUFFER_SIZE) {
-                AESencryption.write(cipher.doFinal(buffer, 0, numBytesRead));
-            } else {
-                int smallBufferSize = numBytesRead + (16 - (numBytesRead % 16));
-                byte[] smallBuffer = new byte[smallBufferSize];
-                System.arraycopy(buffer, 0, smallBuffer, 0, smallBufferSize);
-                AESencryption.write(cipher.doFinal(smallBuffer, 0, smallBufferSize), 0, numBytesRead);
-            }
+            AESencryption.write(cipher.doFinal(buffer, 0, numBytesRead));
         } while (numBytesRead == BUFFER_SIZE);
         AESencryption.close();
         file.close();
