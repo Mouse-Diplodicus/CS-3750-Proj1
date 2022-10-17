@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.security.spec.InvalidKeySpecException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import java.util.Arrays;
 import java.io.FileNotFoundException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -65,7 +64,8 @@ public class Sender{
         BufferedInputStream file = new BufferedInputStream(new FileInputStream(msgFileName));
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         DigestInputStream in = new DigestInputStream(file, md);
-
+        
+        //Read message 1024 bytes at a time
         int i;
         byte[] buffer = new byte[BUFFER_SIZE];
         do {
@@ -168,7 +168,8 @@ public class Sender{
     //read private key parameters from a file and generate the private key
     private static PrivateKey readPrivKeyFromFile(String keyFileName)
             throws IOException {
-        try(ObjectInputStream oin = new ObjectInputStream(new FileInputStream(keyFileName))) {
+        ObjectInputStream oin = new ObjectInputStream(new FileInputStream(keyFileName));
+        try {
             BigInteger m = (BigInteger) oin.readObject();
             BigInteger e = (BigInteger) oin.readObject();
             System.out.println("Read from " + keyFileName + ":\n    modulus = " +
@@ -180,6 +181,8 @@ public class Sender{
             return key;
         } catch (Exception e) {
             throw new RuntimeException("Spurious serialisation error", e);
+        } finally {
+            oin.close();
         }
     }
 

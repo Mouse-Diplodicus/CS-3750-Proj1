@@ -26,6 +26,7 @@ public class Receiver {
             xPublicK = readPubKeyFromFile("XPublic.key");
             symKey = loadSymmetricKey();
             loadAndAESDecrypt();
+            String ddCalculated = getSHA(msgFileName);
             String ddDecrypted = rsaDecrypt(msgFileName);
             String ddCalculated = sha256(msgFileName);
             if (ddDecrypted.equals(ddCalculated)) {
@@ -53,7 +54,7 @@ public class Receiver {
         file.close();
         outFile.close();
     }
-
+    
     private static String rsaDecrypt(String messageOutputFile) throws Exception {
         BufferedInputStream file = new BufferedInputStream(new FileInputStream("message.ds-msg"));
         BufferedOutputStream mOut = new BufferedOutputStream(new FileOutputStream(messageOutputFile));
@@ -88,26 +89,36 @@ public class Receiver {
         return new String(dd, StandardCharsets.UTF_8);
     }
 
-    private static String sha256(String fileName) throws NoSuchAlgorithmException, IOException {
-        BufferedInputStream file = new BufferedInputStream(new FileInputStream(fileName));
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        DigestInputStream in = new DigestInputStream(file, md);
+        // Calculate hash value
+        public static String getSHA(String msgFileName) throws FileNotFoundException, NoSuchAlgorithmException,
+        IOException {
+            BufferedInputStream file = new BufferedInputStream(new FileInputStream(msgFileName));
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            DigestInputStream in = new DigestInputStream(file, md);
+            
+            //Read message 1024 bytes at a time
+            int i;
+            byte[] buffer = new byte[BUFFER_SIZE];
+            do {
+                i = in.read(buffer, 0, BUFFER_SIZE);
+            } while (i == BUFFER_SIZE);
+            md = in.getMessageDigest();
+            in.close();
+            file.close();
 
-        byte[] buffer = new byte[BUFFER_SIZE];
-        int numBytesRead;
-        do {
-            numBytesRead = in.read(buffer, 0, buffer.length);
-        } while (numBytesRead== BUFFER_SIZE);
+            byte[] hash = md.digest();
 
-        md = in.getMessageDigest();
-        in.close();
-        file.close();
+            System.out.println("Calculated Digital Digest (SHA256(M)):");
+            printHash(hash);
 
-        byte[] hash = md.digest();
-        System.out.println("Calculated Digital Digest (SHA256(M)):");
-        printHash(hash);
-        return new String(hash, StandardCharsets.UTF_8);
-    }
+            // Save hash to file message.dd
+            BufferedOutputStream shaMessageFile = new BufferedOutputStream(new FileOutputStream("message.dd"));
+
+            shaMessageFile.write(hash, 0, hash.length);
+            shaMessageFile.close();
+
+            return new String(hash);
+        }
 
     private static void printHash(byte[] hash){
         for (int k = 0; k<hash.length; k++) {
@@ -121,7 +132,8 @@ public class Receiver {
     //read public key parameters from a file and generate the public key
     private static PublicKey readPubKeyFromFile(String keyFileName)
             throws IOException {
-        try(ObjectInputStream oin = new ObjectInputStream(new FileInputStream(keyFileName))) {
+        ObjectInputStream oin = new ObjectInputStream(new FileInputStream(keyFileName));
+        try {
             BigInteger m = (BigInteger) oin.readObject();
             BigInteger e = (BigInteger) oin.readObject();
             System.out.println("Read from " + keyFileName + ":\n    modulus = " +
@@ -133,6 +145,8 @@ public class Receiver {
             return key;
         } catch (Exception e) {
             throw new RuntimeException("Spurious serialisation error", e);
+        } finally {
+            oin.close();
         }
     }
 
