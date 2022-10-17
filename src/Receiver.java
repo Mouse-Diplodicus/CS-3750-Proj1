@@ -28,8 +28,6 @@ public class Receiver {
             loadAndAESDecrypt();
             String ddDecrypted = rsaDecrypt(msgFileName);
             String ddCalculated = sha256(msgFileName);
-            System.out.println("ddDecrypted:  " + ddDecrypted);
-            System.out.println("ddCalculated: " + ddCalculated);
             if (ddDecrypted.equals(ddCalculated)) {
                 System.out.println("Authentication Passed");
             } else {
