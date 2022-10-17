@@ -30,7 +30,7 @@ public class Receiver {
             String ddCalculated = sha256(msgFileName);
             System.out.println("ddDecrypted:  " + ddDecrypted);
             System.out.println("ddCalculated: " + ddCalculated);
-            if (ddDecrypted == ddCalculated) {
+            if (ddDecrypted.equals(ddCalculated)) {
                 System.out.println("Authentication Passed");
             } else {
                 System.out.println("Authentication Failed");
@@ -43,21 +43,14 @@ public class Receiver {
     private static void loadAndAESDecrypt() throws Exception {
         BufferedInputStream file = new BufferedInputStream(new FileInputStream("message.aescipher"));
         BufferedOutputStream outFile = new BufferedOutputStream(new FileOutputStream("message.ds-msg"));
-        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding", "SunJCE");
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding", "SunJCE");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(symKey, "AES"),
                 new IvParameterSpec(IV.getBytes("UTF-8")));
         byte[] buffer = new byte[BUFFER_SIZE];
         int numBytesRead;
         do {
             numBytesRead = file.read(buffer, 0, BUFFER_SIZE);
-            if(numBytesRead == BUFFER_SIZE) {
-                outFile.write(cipher.doFinal(buffer, 0, numBytesRead));
-            } else {
-                int smallBufferSize = numBytesRead + (16 - (numBytesRead % 16));
-                byte[] smallBuffer = new byte[smallBufferSize];
-                System.arraycopy(buffer, 0, smallBuffer, 0, smallBufferSize);
-                outFile.write(cipher.doFinal(smallBuffer, 0, smallBufferSize), 0, numBytesRead);
-            }
+            outFile.write(cipher.doFinal(buffer, 0, numBytesRead));
         } while (numBytesRead == BUFFER_SIZE);
         file.close();
         outFile.close();
