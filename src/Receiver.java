@@ -26,9 +26,8 @@ public class Receiver {
             xPublicK = readPubKeyFromFile("XPublic.key");
             symKey = loadSymmetricKey();
             loadAndAESDecrypt();
-            String ddCalculated = getSHA(msgFileName);
             String ddDecrypted = rsaDecrypt(msgFileName);
-            String ddCalculated = sha256(msgFileName);
+            String ddCalculated = getSHA(msgFileName);
             if (ddDecrypted.equals(ddCalculated)) {
                 System.out.println("Authentication Passed");
             } else {

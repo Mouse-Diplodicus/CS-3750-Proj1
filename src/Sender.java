@@ -98,14 +98,10 @@ public class Sender{
     }
 
     // Step 5: Calculate RSA Encryption
-    public static void RSAencrypt(byte[] hash, String messageName) throws NoSuchAlgorithmException, BadPaddingException,
-            NoSuchPaddingException, IOException, InvalidKeyException, IllegalBlockSizeException{
+    public static void RSAencrypt(byte[] hash, String messageName) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.ENCRYPT_MODE, xPrivateK);
         byte[] cipherText = cipher.doFinal(hash);
-
-        // System.out.println("CipherText block size is "
-        // +  cipherText.length + " bytes");      //32 -> 128 bytes
 
         System.out.println("Cipher Text (RSA-En Kx– (SHA256(M))):");
         printHash(cipherText);
