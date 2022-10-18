@@ -44,12 +44,14 @@ public class Receiver {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding", "SunJCE");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(symKey, "AES"),
                 new IvParameterSpec(IV.getBytes("UTF-8")));
+
         byte[] buffer = new byte[BUFFER_SIZE];
         int numBytesRead;
         do {
             numBytesRead = file.read(buffer, 0, BUFFER_SIZE);
             outFile.write(cipher.doFinal(buffer, 0, numBytesRead));
         } while (numBytesRead == BUFFER_SIZE);
+
         file.close();
         outFile.close();
     }
@@ -88,36 +90,35 @@ public class Receiver {
         return new String(dd, StandardCharsets.UTF_8);
     }
 
-        // Calculate hash value
-        public static String getSHA(String msgFileName) throws FileNotFoundException, NoSuchAlgorithmException,
-        IOException {
-            BufferedInputStream file = new BufferedInputStream(new FileInputStream(msgFileName));
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            DigestInputStream in = new DigestInputStream(file, md);
-            
-            //Read message 1024 bytes at a time
-            int i;
-            byte[] buffer = new byte[BUFFER_SIZE];
-            do {
-                i = in.read(buffer, 0, BUFFER_SIZE);
-            } while (i == BUFFER_SIZE);
-            md = in.getMessageDigest();
-            in.close();
-            file.close();
+    // Calculate hash value
+    public static String getSHA(String msgFileName) throws NoSuchAlgorithmException, IOException {
+        BufferedInputStream file = new BufferedInputStream(new FileInputStream(msgFileName));
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        DigestInputStream in = new DigestInputStream(file, md);
 
-            byte[] hash = md.digest();
+        //Read message 1024 bytes at a time
+        int i;
+        byte[] buffer = new byte[BUFFER_SIZE];
+        do {
+            i = in.read(buffer, 0, BUFFER_SIZE);
+        } while (i == BUFFER_SIZE);
+        md = in.getMessageDigest();
+        in.close();
+        file.close();
 
-            System.out.println("Calculated Digital Digest (SHA256(M)):");
-            printHash(hash);
+        byte[] hash = md.digest();
 
-            // Save hash to file message.dd
-            BufferedOutputStream shaMessageFile = new BufferedOutputStream(new FileOutputStream("message.dd"));
+        System.out.println("Calculated Digital Digest (SHA256(M)):");
+        printHash(hash);
 
-            shaMessageFile.write(hash, 0, hash.length);
-            shaMessageFile.close();
+        // Save hash to file message.dd
+        BufferedOutputStream shaMessageFile = new BufferedOutputStream(new FileOutputStream("message.dd"));
 
-            return new String(hash);
-        }
+        shaMessageFile.write(hash, 0, hash.length);
+        shaMessageFile.close();
+
+        return new String(hash);
+    }
 
     private static void printHash(byte[] hash){
         for (int k = 0; k<hash.length; k++) {
